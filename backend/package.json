@@ -25,6 +25,7 @@
     "@types/cors": "latest",
     "@types/express": "latest",
     "@types/jsonwebtoken": "latest",
+    "@types/multer": "^2.1.0",
     "@types/node": "latest",
     "@types/pg": "latest",
     "tsx": "latest",

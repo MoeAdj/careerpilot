@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 // I add userId to the request so protected routes know who is logged in.
 export interface AuthRequest extends Request {
   userId?: number;
+  file?: Express.Multer.File;
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
