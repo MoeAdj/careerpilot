@@ -26,9 +26,13 @@ router.post('/signup', async (req, res) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
 
     return res.status(201).json({ user, token });
-  } catch (error) {
-    return res.status(500).json({ message: 'Could not create account. Email may already be used.' });
-  }
+  }  catch (error) {
+  console.error('SIGNUP ERROR:', error);
+
+  return res.status(500).json({
+    message: 'Could not create account'
+  });
+}
 });
 
 // Login route
