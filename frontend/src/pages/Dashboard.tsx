@@ -153,7 +153,7 @@ async function updateApplicationStatus(id: number, status: string) {
     </p>
 
     <p className="text-sm text-slate-500">
-      Fall 2026 Co-op Search
+      get your first job today!!!
     </p>
   </div>
 </aside>

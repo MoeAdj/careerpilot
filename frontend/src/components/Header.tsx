@@ -14,7 +14,7 @@ export default function Header({ onLogout, isLoggedIn }: HeaderProps) {
         </div>
         <div>
           <h1 className="text-xl font-bold">CareerPilot</h1>
-          <p className="text-sm text-slate-400">Co-op tracking made less stressful</p>
+          <p className="text-sm text-slate-400">jobs/internships made less stressful 😎</p>
         </div>
       </div>
 
