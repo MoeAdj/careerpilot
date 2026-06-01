@@ -4,7 +4,7 @@ import Header from './components/Header';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-
+import ResetPasswordPage from './pages/ResetPasswordPage';
 export default function App() {
   const isLoggedIn = Boolean(
     localStorage.getItem('careerpilot_token')
@@ -47,6 +47,10 @@ export default function App() {
               )
             }
           />
+          <Route
+  path="/reset-password"
+  element={<ResetPasswordPage />}
+/>
         </Routes>
       </div>
     </BrowserRouter>
