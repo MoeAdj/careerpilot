@@ -221,7 +221,7 @@ async function updateApplicationStatus(id: number, status: string) {
   </div>
 </section>
 
-      <section className="grid gap-8 lg:grid-cols-[420px_1fr]">
+      <section className="grid gap-8 lg:grid-cols-[380px_1fr]"></section>
         <div className="space-y-6">
           <form onSubmit={addApplication} className="rounded-3xl border border-slate-700 bg-slate-900 p-6">
             <h2 className="mb-4 text-2xl font-bold">Add application</h2>
@@ -302,31 +302,42 @@ console.log('AFTER SET:', data.resumeText);
         </p>
 
         <p className="mt-3 text-5xl font-extrabold text-blue-400">
+          {resumeResult && (
+  <div className="mt-6 space-y-6">
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-3xl border border-blue-500/30 bg-slate-900 p-6">
+        <p className="text-sm uppercase tracking-widest text-slate-400">
+          ATS Score
+        </p>
+
+        <p className="mt-3 text-5xl font-extrabold text-blue-400">
           {resumeResult.score}
         </p>
       </div>
 
       <div className="rounded-3xl border border-green-500/30 bg-slate-900 p-6">
         <p className="text-sm uppercase tracking-widest text-slate-400">
-          AI Analysis
+          Analysis Status
         </p>
 
-        <p className="mt-3 text-lg font-bold text-green-400">
-          Complete
+        <p className="mt-3 text-xl font-bold text-green-400">
+          Complete ✓
         </p>
       </div>
     </div>
 
-    <div className="rounded-3xl border border-slate-700 bg-slate-800 p-5">
-      <h3 className="mb-4 text-xl font-bold text-white">
+    <div className="rounded-3xl border border-slate-700 bg-slate-900 p-6">
+      <h3 className="mb-6 text-2xl font-bold text-white">
         AI Resume Report
       </h3>
 
-      <pre className="whitespace-pre-wrap rounded-2xl bg-slate-950 p-4 text-sm leading-7 text-slate-300">
-        {resumeResult.feedback}
-      </pre>
+      <div className="max-h-[700px] overflow-y-auto rounded-2xl bg-slate-950 p-6">
+        <pre className="whitespace-pre-wrap text-base leading-8 text-slate-300">
+          {resumeResult.feedback}
+        </pre>
+      </div>
     </div>
-
   </div>
 )}
           </div>

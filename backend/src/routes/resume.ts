@@ -51,13 +51,25 @@ router.post('/feedback', async (req: AuthRequest, res) => {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash'
-    });
+  model: 'gemini-2.5-flash'
+});
 
-    const aiResult = await model.generateContent(`
-You are CareerPilot, an expert technical recruiter and resume coach for computer science students.
+const aiResult = await model.generateContent(`
+You are CareerPilot, an expert ATS recruiter, hiring manager, resume reviewer, and software engineering career coach.
 
-Analyze the resume professionally. Be specific, useful, and honest.
+Analyze the resume professionally and honestly.
+
+Do not provide generic feedback.
+
+If a job description is provided:
+- Compare the resume against the job description.
+- Calculate an ATS Match Score.
+- Identify missing keywords.
+- Identify missing technical skills.
+- Explain weaknesses that could prevent an interview.
+
+If no job description is provided:
+- Analyze the resume against current software engineering hiring standards.
 
 Return the answer EXACTLY in this format:
 
@@ -77,21 +89,26 @@ TOP STRENGTHS:
 - strength 1
 - strength 2
 - strength 3
+- strength 4
 
 WEAKNESSES:
 - weakness 1
 - weakness 2
 - weakness 3
+- weakness 4
 
 MISSING KEYWORDS:
 - keyword 1
 - keyword 2
 - keyword 3
+- keyword 4
+- keyword 5
 
 SPECIFIC IMPROVEMENTS:
 - improvement 1
 - improvement 2
 - improvement 3
+- improvement 4
 
 IMPROVED RESUME BULLETS:
 - improved bullet 1
@@ -104,9 +121,11 @@ RECOMMENDED NEXT SKILLS:
 - skill 1
 - skill 2
 - skill 3
+- skill 4
 
 FINAL ADVICE:
-Short paragraph with direct advice.
+Provide direct professional advice.
+Explain what would most improve the candidate's chances of getting interviews.
 
 Resume:
 ${resumeText}
