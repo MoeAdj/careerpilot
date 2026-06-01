@@ -47,7 +47,7 @@ onLogin();
 
       <section className="rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h3 className="mb-2 text-2xl font-bold">{mode === 'signup' ? 'Create account' : 'Welcome back'}</h3>
-        <p className="mb-6 text-slate-400">Use any test email while running locally.</p>
+        <p className="mb-6 text-slate-400">Find your job today.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
@@ -74,7 +74,29 @@ onLogin();
             type="password"
             className="w-full rounded-xl p-3"
           />
+          <p
+  className="cursor-pointer text-sm text-blue-400 hover:text-blue-300"
+  onClick={async () => {
+    const userEmail = prompt('Enter your email');
 
+    if (!userEmail) return;
+
+    try {
+      const data = await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: userEmail
+        })
+      });
+
+      alert(data.message);
+    } catch (error) {
+      alert('Failed to send reset request');
+    }
+  }}
+>
+  Forgot Password?
+</p>
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <button className="w-full rounded-xl bg-blue-500 px-4 py-3 font-semibold hover:bg-blue-400">

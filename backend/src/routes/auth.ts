@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { pool } from '../db/pool';
 
 const router = express.Router();
@@ -68,5 +69,101 @@ router.post('/login', async (req, res) => {
     return res.status(500).json({ message: 'Login failed' });
   }
 });
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({
+      message: 'Email is required'
+    });
+  }
+
+  try {
+    const userResult = await pool.query(
+  'SELECT id, email FROM users WHERE email = $1',
+  [email]
+);
+
+console.log('USER RESULT:', userResult.rows);
+
+    if (userResult.rows.length === 0) {
+      return res.json({
+        message:
+          'If that email exists, a reset link has been generated.'
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    const expires = new Date(
+      Date.now() + 1000 * 60 * 60
+    );
+
+    await pool.query(
+      `UPDATE users
+       SET reset_token = $1,
+           reset_token_expires = $2
+       WHERE email = $3`,
+      [resetToken, expires, email]
+    );
+
+    console.log('RESET TOKEN:', email, resetToken);
+
+    return res.json({
+      message: 'Reset token generated.'
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Failed to generate reset token'
+    });
+  }
+});
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({
+      message: 'Token and password are required'
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id
+       FROM users
+       WHERE reset_token = $1
+       AND reset_token_expires > NOW()`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        message: 'Invalid or expired token'
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      `UPDATE users
+       SET password_hash = $1,
+           reset_token = NULL,
+           reset_token_expires = NULL
+       WHERE id = $2`,
+      [passwordHash, result.rows[0].id]
+    );
+
+    return res.json({
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Password reset failed'
+    });
+  }
+});
 export default router;

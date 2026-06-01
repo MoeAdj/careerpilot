@@ -30,8 +30,8 @@ export default function Dashboard() {
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [resumeResult, setResumeResult] = useState<{ score: number; feedback: string } | null>(null);
-
+  const [resumeResult, setResumeResult] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
   async function loadApplications() {
     const data = await apiRequest('/applications');
     setApplications(data);
@@ -114,9 +114,9 @@ async function updateApplicationStatus(id: number, status: string) {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
 
-  <aside className="w-72 border-r border-slate-800 bg-slate-950 p-6">
+  <aside className="hidden md:block w-72 border-r border-slate-800 bg-slate-950 p-6">
   <h1 className="mb-8 text-3xl font-extrabold text-white">
     CareerPilot
   </h1>
@@ -153,19 +153,21 @@ async function updateApplicationStatus(id: number, status: string) {
     </p>
 
     <p className="text-sm text-slate-500">
-      get your first job today!!!
+      GET YOUR FIRST JOB TODAY!!!
     </p>
   </div>
 </aside>
 
-  <main className="flex-1 px-8 py-8">
-      <section className="mb-8 overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-blue-600/20 via-slate-900 to-slate-900 p-8">
+  <main className="flex-1 px-4 md:px-8 py-4 md:py-8 pb-24">
+      <section className="mb-8 overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-blue-600/20 via-slate-900 to-slate-900 p-4 md:p-8">
   <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
     CareerPilot
   </p>
 
-  <h1 className="mt-3 text-5xl font-extrabold">
-    Welcome back, {user.name || 'Student'} 👋
+  <h1 className="mt-3 text-2xl sm:text-3xl md:text-5xl font-extrabold">
+    Welcome back,
+<br />
+{user.name || 'Student'} 👋
   </h1>
 
   <p className="mt-4 max-w-2xl text-lg text-slate-300">
@@ -187,7 +189,7 @@ async function updateApplicationStatus(id: number, status: string) {
   </div>
 </div>
 </section>
-      <section className="mb-10 grid gap-5 md:grid-cols-4">
+      <section className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard label="Applications" value={stats.total} />
         <StatCard label="Interviews" value={stats.interviews} />
         <StatCard label="Offers" value={stats.offers} />
@@ -198,7 +200,7 @@ async function updateApplicationStatus(id: number, status: string) {
     Application Analytics
   </h2>
 
-  <div style={{ width: '100%', height: 300 }}>
+  <div className="h-[300px] w-full min-w-0">
     <ResponsiveContainer>
       <PieChart>
         <Pie
@@ -291,16 +293,47 @@ console.log('AFTER SET:', data.resumeText);
 />
             <button onClick={checkResume} className="mt-3 w-full rounded-xl bg-emerald-500 py-3 font-semibold hover:bg-emerald-400">Check resume</button>
             {resumeResult && (
-              <div className="mt-4 rounded-2xl bg-slate-800 p-4">
-                <p className="font-bold">Score: {resumeResult.score}/100</p>
-                <p className="mt-2 text-sm text-slate-300">{resumeResult.feedback}</p>
-              </div>
-            )}
+  <div className="mt-5 space-y-5">
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-3xl border border-blue-500/30 bg-slate-900 p-6">
+        <p className="text-sm uppercase tracking-widest text-slate-400">
+          ATS Score
+        </p>
+
+        <p className="mt-3 text-5xl font-extrabold text-blue-400">
+          {resumeResult.score}
+        </p>
+      </div>
+
+      <div className="rounded-3xl border border-green-500/30 bg-slate-900 p-6">
+        <p className="text-sm uppercase tracking-widest text-slate-400">
+          AI Analysis
+        </p>
+
+        <p className="mt-3 text-lg font-bold text-green-400">
+          Complete
+        </p>
+      </div>
+    </div>
+
+    <div className="rounded-3xl border border-slate-700 bg-slate-800 p-5">
+      <h3 className="mb-4 text-xl font-bold text-white">
+        AI Resume Report
+      </h3>
+
+      <pre className="whitespace-pre-wrap rounded-2xl bg-slate-950 p-4 text-sm leading-7 text-slate-300">
+        {resumeResult.feedback}
+      </pre>
+    </div>
+
+  </div>
+)}
           </div>
         </div>
 
         <section className="rounded-3xl border border-slate-700 bg-slate-900 p-6">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
   <div>
     <h2 className="text-3xl font-bold">Application Pipeline</h2>
     <p className="text-slate-400">

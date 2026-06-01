@@ -5,182 +5,108 @@ import { pool } from '../db/pool';
 import { AuthRequest, requireAuth } from '../middleware/auth';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY!
-);
+const router = express.Router();
 const upload = multer();
 
-const router = express.Router();
-
-
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 router.use(requireAuth);
 
-// This is a simple resume feedback route.
-// Later, this could connect to a real AI API, but for now it gives rule-based feedback.
-router.post(
-  '/upload',
-  upload.single('resume'),
-  async (req: AuthRequest, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          message: 'No PDF uploaded'
-        });
-      }
+router.post('/upload', upload.single('resume'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No PDF uploaded' });
+    }
 
-      const parser = new pdf.PDFParse({
-  data: req.file.buffer
-});
+    const parser = new pdf.PDFParse({
+      data: req.file.buffer
+    });
 
-const data = await parser.getText();
+    const data = await parser.getText();
 
-return res.json({
-  resumeText: data.text
-});
+    return res.json({
+      resumeText: data.text
+    });
+  } catch (error) {
+    console.error(error);
 
-      
-    } catch (error) {
-  console.error(error);
-
-  return res.status(500).json({
-    message: 'Could not read PDF',
-    error: String(error)
-  });
-}
+    return res.status(500).json({
+      message: 'Could not read PDF',
+      error: String(error)
+    });
   }
-);
+});
+
 router.post('/feedback', async (req: AuthRequest, res) => {
   const { resumeText, jobDescription } = req.body;
 
   if (!resumeText) {
-    return res.status(400).json({ message: 'Resume text is required' });
+    return res.status(400).json({
+      message: 'Resume text is required'
+    });
   }
 
-  const text = resumeText.toLowerCase();
-  
+  let score = 70;
+  let finalFeedback = '';
 
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash'
+    });
 
-  let matchScore = 0;
-  const missingKeywords: string[] = [];
+    const aiResult = await model.generateContent(`
+You are CareerPilot, an expert technical recruiter and resume coach for computer science students.
 
-if (jobDescription) {
-  const keywords = [
-  'react',
-  'typescript',
-  'javascript',
-  'python',
-  'c++',
-  'java',
-  'node',
-  'express',
-  'postgresql',
-  'sql',
-  'rest',
-  'api',
-  'apis',
-  'git',
-  'github',
-  'html',
-  'css',
-  'frontend',
-  'backend',
-  'full-stack',
-  'software engineer',
-  'data analysis',
-  'visualization',
-  'ai'
-];
+Analyze the resume professionally. Be specific, useful, and honest.
 
-  for (const keyword of keywords) {
-    if (jobDescription.toLowerCase().includes(keyword)) {
-      if (text.includes(keyword)) {
-        matchScore += 10;
-      } else {
-        missingKeywords.push(keyword);
-      }
-    }
-  }
+Return the answer EXACTLY in this format:
 
-  matchScore = Math.min(matchScore, 100);
-}
+ATS SCORE:
+[number from 0-100]
 
-let score = 0;
-const feedback: string[] = [];
+JOB MATCH SCORE:
+[number from 0-100]
 
-if (text.includes('@')) {
-  score += 10;
-} else {
-  feedback.push('Add a professional email address.');
-}
+CAREER FIELD:
+[field]
 
-if (text.includes('education')) {
-  score += 15;
-} else {
-  feedback.push('Add an Education section.');
-}
+EXPERIENCE LEVEL:
+[level]
 
-if (text.includes('skills')) {
-  score += 15;
-} else {
-  feedback.push('Add a Skills section.');
-}
+TOP STRENGTHS:
+- strength 1
+- strength 2
+- strength 3
 
-if (text.includes('project') || text.includes('projects')) {
-  score += 20;
-} else {
-  feedback.push('Include projects that demonstrate your abilities.');
-}
+WEAKNESSES:
+- weakness 1
+- weakness 2
+- weakness 3
 
-if (text.includes('experience')) {
-  score += 20;
-} else {
-  feedback.push('Add work, internship, or volunteer experience.');
-}
+MISSING KEYWORDS:
+- keyword 1
+- keyword 2
+- keyword 3
 
-if (text.includes('github')) {
-  score += 10;
-} else {
-  feedback.push('Add your GitHub profile.');
-}
+SPECIFIC IMPROVEMENTS:
+- improvement 1
+- improvement 2
+- improvement 3
 
-if (text.includes('linkedin')) {
-  score += 10;
-} else {
-  feedback.push('Add your LinkedIn profile.');
-}
+IMPROVED RESUME BULLETS:
+- improved bullet 1
+- improved bullet 2
+- improved bullet 3
+- improved bullet 4
+- improved bullet 5
 
-score = Math.min(score, 100);
+RECOMMENDED NEXT SKILLS:
+- skill 1
+- skill 2
+- skill 3
 
-let finalFeedback =
-  `Local Analysis\n\n` +
-  `Job Match Score: ${matchScore}%.\n\n` +
-  feedback.join(' ') +
-  (missingKeywords.length
-    ? ` Missing keywords: ${missingKeywords.join(', ')}.`
-    : '');
-
-try {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash'
-  });
-
-  const aiResult = await model.generateContent(`
-You are an expert recruiter and career coach.
-
-Analyze this resume and automatically determine the candidate's field.
-
-Provide:
-
-1. Career Field
-2. Experience Level
-3. Resume Score (0-100)
-4. Top Strengths
-5. Top Weaknesses
-6. Missing Skills or Keywords
-7. Specific Improvements
-8. Job Match Score (if a job description is provided)
+FINAL ADVICE:
+Short paragraph with direct advice.
 
 Resume:
 ${resumeText}
@@ -189,14 +115,25 @@ Job Description:
 ${jobDescription || 'No job description provided'}
 `);
 
-  finalFeedback = aiResult.response.text();
-} catch (error) {
-  console.error('Gemini failed, using local analyzer:', error);
-}
-  
+    finalFeedback = aiResult.response.text();
+    console.log('GEMINI RESPONSE:');
+console.log(finalFeedback);
+
+    const scoreMatch = finalFeedback.match(/ATS SCORE:\s*(\d+)/i);
+    if (scoreMatch) {
+      score = Number(scoreMatch[1]);
+    }
+  } catch (error) {
+    console.error('Gemini failed:', error);
+
+    finalFeedback =
+      'AI resume analysis failed. Please check your GEMINI_API_KEY and try again.';
+  }
 
   const result = await pool.query(
-    'INSERT INTO resume_feedback (user_id, resume_text, score, feedback) VALUES ($1, $2, $3, $4) RETURNING *',
+    `INSERT INTO resume_feedback (user_id, resume_text, score, feedback)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
     [req.userId, resumeText, score, finalFeedback]
   );
 
