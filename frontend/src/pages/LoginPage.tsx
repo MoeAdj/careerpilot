@@ -89,7 +89,9 @@ onLogin();
         })
       });
 
-      alert(data.message);
+      alert(
+  `Reset Link:\n\n${window.location.origin}/reset-password?token=${data.token}`
+);
     } catch (error) {
       alert('Failed to send reset request');
     }

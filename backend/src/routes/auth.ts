@@ -1,11 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { Resend } from 'resend';
 import crypto from 'crypto';
 import { pool } from '../db/pool';
 
 const router = express.Router();
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Signup route
 // This creates a new user and stores a hashed password, not the real password.
 router.post('/signup', async (req, res) => {
@@ -107,11 +108,38 @@ console.log('USER RESULT:', userResult.rows);
       [resetToken, expires, email]
     );
 
-    console.log('RESET TOKEN:', email, resetToken);
+    const resetLink =
+  `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    return res.json({
-      message: 'Reset token generated.'
-    });
+await resend.emails.send({
+  from: 'CareerPilot <onboarding@resend.dev>',
+  to: email,
+  subject: 'Reset your CareerPilot password',
+  html: `
+    <h2>Reset Your Password</h2>
+
+    <p>Click the button below to reset your password.</p>
+
+    <a
+      href="${resetLink}"
+      style="
+        background:#2563eb;
+        color:white;
+        padding:12px 20px;
+        text-decoration:none;
+        border-radius:8px;
+      "
+    >
+      Reset Password
+    </a>
+
+    <p>This link expires in 1 hour.</p>
+  `
+});
+
+return res.json({
+  message: 'Password reset email sent.'
+});
   } catch (error) {
     console.error(error);
 

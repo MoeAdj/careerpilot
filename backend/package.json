@@ -18,7 +18,8 @@
     "multer": "^2.1.1",
     "openai": "^6.39.0",
     "pdf-parse": "^2.4.5",
-    "pg": "latest"
+    "pg": "latest",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "latest",
