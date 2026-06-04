@@ -4,7 +4,7 @@ import * as pdf from 'pdf-parse';
 import { pool } from '../db/pool';
 import { AuthRequest, requireAuth } from '../middleware/auth';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+import PDFDocument from 'pdfkit';
 const router = express.Router();
 const upload = multer();
 
@@ -158,5 +158,83 @@ console.log(finalFeedback);
 
   return res.json(result.rows[0]);
 });
+router.post('/optimize', async (req: AuthRequest, res) => {
+  const { resumeText, jobDescription } = req.body;
 
+  if (!resumeText || !jobDescription) {
+    return res.status(400).json({
+      message: 'Resume text and job description are required'
+    });
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash'
+    });
+
+    const aiResult = await model.generateContent(`
+You are CareerPilot, an expert resume writer for all majors and career fields.
+
+Rewrite this resume for the provided job description.
+
+Rules:
+- Keep the resume truthful.
+- Do not invent fake jobs, fake degrees, fake companies, or fake experience.
+- Improve wording and make bullet points stronger.
+- Add relevant keywords from the job description only when they match the user's real experience.
+- Make it professional and ATS-friendly.
+- Work for any major: computer science, business, nursing, engineering, finance, marketing, biology, education, etc.
+- Return ONLY the final optimized resume text.
+- Do not include explanations.
+
+Resume:
+${resumeText}
+
+Job Description:
+${jobDescription}
+`);
+
+    const optimizedResume = aiResult.response.text();
+
+    const doc = new PDFDocument({
+      margin: 50
+    });
+
+    const chunks: Buffer[] = [];
+
+    doc.on('data', (chunk) => {
+      chunks.push(chunk);
+    });
+
+    doc.on('end', () => {
+      const pdfBuffer = Buffer.concat(chunks);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="Optimized_Resume.pdf"'
+      );
+
+      res.send(pdfBuffer);
+    });
+
+    doc.fontSize(20).text('Optimized Resume', {
+      align: 'center'
+    });
+
+    doc.moveDown();
+
+    doc.fontSize(11).text(optimizedResume, {
+      lineGap: 5
+    });
+
+    doc.end();
+  } catch (error) {
+    console.error('OPTIMIZE RESUME ERROR:', error);
+
+    return res.status(500).json({
+      message: 'Could not optimize resume'
+    });
+  }
+});
 export default router;

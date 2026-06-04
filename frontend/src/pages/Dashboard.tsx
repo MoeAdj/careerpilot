@@ -107,10 +107,42 @@ export default function Dashboard() {
         jobDescription
       })
     });
-
+  
     setResumeResult(data);
   }
+  async function optimizeResumePdf() {
+  const token = localStorage.getItem('careerpilot_token');
 
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/resume/optimize`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token || ''}`
+      },
+      body: JSON.stringify({
+        resumeText,
+        jobDescription
+      })
+    }
+  );
+
+  if (!response.ok) {
+    alert('Could not optimize resume');
+    return;
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Optimized_Resume.pdf';
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+}
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="hidden w-72 border-r border-slate-800 bg-slate-950 p-6 md:block">
@@ -317,6 +349,12 @@ export default function Dashboard() {
               >
                 Check resume
               </button>
+              <button
+  onClick={optimizeResumePdf}
+  className="mt-3 w-full rounded-xl bg-blue-500 py-3 font-semibold hover:bg-blue-400"
+>
+  Download Optimized Resume PDF
+</button>
 
               {resumeResult && (
                 <div className="mt-6 space-y-6">
